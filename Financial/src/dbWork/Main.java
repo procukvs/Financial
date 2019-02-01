@@ -15,6 +15,7 @@ public class Main {
 		wk.work();
 	}
 	private void work(){
+		System.out.println("Begin work wth Financial.");
 		if (db.connectionDb()){
 			boolean res;
 			ArrayList ap = null;
