@@ -1,6 +1,7 @@
 package dbWork;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 
 public class DbAccess {
@@ -36,6 +37,82 @@ public class DbAccess {
 	}
 	
 	public String getMsgError() {return msgError;}
+	
+	// -----------------------------------------------------------------------
+	public ArrayList selectOne(String what, ArrayList param) {
+		ArrayList res = new ArrayList();
+		String cl;
+		switch (what) {
+		case "lastClient": sql = "select max(idCl) from client"; break;
+		case "lastProduct": sql = "select max(idPr) from product"; break;
+		case "lastAccount": 
+			switch((String) param.get(0)) {
+			case "cash": cl = "1"; break;
+			case "current": cl = "2"; break;
+			case "deposit": cl = "3"; break;
+			case "credit": cl = "4"; break;
+			case "out": cl = "5"; break;
+			case "income": cl = "7"; break;
+			case "costDep": cl = "8"; break;
+			case "costLoss": cl = "9"; break;
+			default: cl = "6"; break;        // capital
+			} 
+			sql = "select max(substr(number,3)) from account where substr(number,1,1)= '" + cl + "'" ; break;
+		}
+		try{
+			s.execute(sql);
+			rs = s.getResultSet();
+		       if((rs!=null) && (rs.next())) {
+		    	   switch (what) {
+		    	   case "lastClient": case "lastProduct": if (rs.getObject(1)!=null) res.add(rs.getInt(1)); else res.add(0); break;
+		    	   case "lastNUmber": if (rs.getObject(1)!=null) res.add(rs.getString(1)); else res.add("0000"); break;
+		    	   }
+		       }   
+		}
+		catch (Exception e) {
+			msgError = "selectOne:what:" + sql + " " + e.getMessage();
+			System.out.println(msgError);
+			res = null;  // ???????????????????????????
+		}
+				
+		return res;
+	}
+	
+	public boolean execPrecedent(String what, ArrayList work) {
+		boolean res = true;
+		String nmStep="";
+		ArrayList step;
+		int i=0;
+		try {
+			conn.setAutoCommit(false);
+			try{
+				for(i=0; i<work.size();i++) {
+					step = (ArrayList)work.get(i);
+					nmStep = (String)step.get(0);
+					switch (nmStep){
+					case "insClient" : sql = "insert into client values (" + (int)step.get(1) +",'" + (String)step.get(2) + "')"; break;	
+					case "insProduct" : sql = "insert into product values (" + 
+					         	(int)step.get(1)+ ","  + (int)step.get(2) +",'" + (String)step.get(3)+ "','" + (String)step.get(4) + "')"; break;	
+					case "insAccount" :  sql = "insert into account values ('" + 
+					          	(String)step.get(1) + "'," + (int)step.get(2) + ",'"  + (String)step.get(3) +"','" + 
+					          	(String)step.get(4) + "')"; break;          
+					}
+					s.executeUpdate(sql);
+				}
+				conn.rollback();
+			}
+			catch (Exception e) {
+				res = false;
+				conn.rollback();
+				msgError = "execPrecedent:" + what + ":" + i + ":" + nmStep + ":" + e.getMessage();
+				System.out.println(msgError);
+			}
+			conn.setAutoCommit(true);
+		}	
+		catch (Exception e) { res=false; System.out.println("execPrecedent: " + e.getMessage());}	
+		return res;
+	}
+	
 	
 	private boolean iswfCurrent(Date begin, int idCl) {
 		boolean res = true;
