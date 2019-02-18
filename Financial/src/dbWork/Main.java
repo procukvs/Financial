@@ -1,6 +1,18 @@
 package dbWork;
 import java.util.*;
 import java.text.*;
+/*
+ *   версія роботи з ДБ через прості класи 
+ *     ---dbAccess ----
+ *    класи Client, AccountOp, CreditOp, DeposOp, 
+ *          Current, Instant, Movement, Account, Amount
+ *    набір методів для виборки окремих екземплярів
+ *         takeClient, takeCurrent, takeInstant, ......
+ *    набір методів для змін 
+ *      кожний метод - реалізує подію
+ *      beginClient, putClient, takeClient, moveClient 
+ *           
+ */
 
 public class Main {
 
