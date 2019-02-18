@@ -4,13 +4,23 @@ import java.sql.Date;
 import java.util.*;
 
 public class WorkDB {
-	private DbAccess db =null; 
+	private DbAccessP db =null; 
 	
-	public WorkDB(DbAccess db) {
+	public WorkDB(DbAccessP db) {
+		boolean res;
 		this.db = db;
+		if (db.connectionDb()){
+			
+			res = beginClient("2012-02-03"," ваша");
+			System.out.println("res = " + res);	
+	        db.disConnect();
+		}
+		else System.out.println("No connection to DB financial");	
+		
 	}
 	
-	public boolean beginClient(Date begin, String name) {
+	// date is in format "yyyy-mm-dd"
+	public boolean beginClient(String begin, String name) {
 		boolean res = true;
 		ArrayList param = new ArrayList();
 		ArrayList sel;
@@ -18,15 +28,28 @@ public class WorkDB {
 		String numb="";
 		sel = db.selectOne("lastClient", param);
 		//if(sel.size()==0) res = false; else  
-		idCl = (int)sel.get(0);
+		idCl = (int)sel.get(0) + 1;
 		sel = db.selectOne("lastProduct", param);
-		idPr = (int)sel.get(0);
+		System.out.println("idPr:"+(int)sel.get(0));
+		idPr = (int)sel.get(0)  + 1;
 		param.add("current");
-		sel = db.selectOne("lastAccount", param);
+		sel = db.selectOne("lastNumber", param);
+		System.out.println("part:"+(String)sel.get(0));
 		numb = evalNextNumber("current",(String)sel.get(0));
 		
-		
-		return res;
+		ArrayList precedent = new ArrayList();
+		ArrayList step = new ArrayList();
+		// insClient: idCl + name ----
+		step.add("insClient"); step.add(idCl); step.add(name); 
+		precedent.add(step); step = new ArrayList(); //step.clear();
+		// insProduct: idPr + idCl + "current" + begin
+		step.add("insProduct"); step.add(idPr); step.add(idCl); step.add("current");  
+		step.add(Main.buildSqlDate(begin));  
+		precedent.add(step); step = new ArrayList(); //step.clear();
+		//  insAccount: numb + idPr + "current" + "pas"
+		step.add("insAccount"); step.add(numb); step.add(idPr); step.add("current"); step.add("pas");  
+		precedent.add(step);
+		return db.execPrecedent("beginClient", precedent);
 	}
 	
 	private String evalNextNumber(String kind, String part) {
@@ -57,7 +80,15 @@ public class WorkDB {
 		case 1: break;
 		default: test = 11-sumNewPart % 10;
 		}
+		System.out.println("cl:" +cl+ ":test:"+test + ":newPart:" + newPart );
 		return cl+test+newPart;
+	}
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		//db = new DbAccess();
+		WorkDB wk = new WorkDB(new DbAccessP());
+		
 	}
 
 }

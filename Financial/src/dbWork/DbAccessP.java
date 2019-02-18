@@ -3,14 +3,13 @@ package dbWork;
 import java.sql.*;
 import java.util.ArrayList;
 
-
-public class DbAccess {
+public class DbAccessP {
 	private Connection conn = null;
 	private Statement s; 
 	private ResultSet rs;
 	private String sql;
 	private String msgError = "";
-	DbAccess(){ 
+	DbAccessP(){ 
 		try  {
 			Class.forName("com.mysql.jdbc.Driver");
 		} catch(Exception ex) {
@@ -45,7 +44,7 @@ public class DbAccess {
 		switch (what) {
 		case "lastClient": sql = "select max(idCl) from client"; break;
 		case "lastProduct": sql = "select max(idPr) from product"; break;
-		case "lastAccount": 
+		case "lastNumber": 
 			switch((String) param.get(0)) {
 			case "cash": cl = "1"; break;
 			case "current": cl = "2"; break;
@@ -60,12 +59,20 @@ public class DbAccess {
 			sql = "select max(substr(number,3)) from account where substr(number,1,1)= '" + cl + "'" ; break;
 		}
 		try{
+			System.out.println("selectOne:" + what + ":" + sql);
 			s.execute(sql);
 			rs = s.getResultSet();
 		       if((rs!=null) && (rs.next())) {
-		    	   switch (what) {
+		    	   if(what.equals("lastNumber")) {
+		    		   String ss;
+		    		   if (rs.getObject(1)!=null) ss = "1"; else ss= rs.getString(1);
+		    		   System.out.println("lastNumber " +  ss);
+		    	   }
+				   switch (what) {
 		    	   case "lastClient": case "lastProduct": if (rs.getObject(1)!=null) res.add(rs.getInt(1)); else res.add(0); break;
-		    	   case "lastNUmber": if (rs.getObject(1)!=null) res.add(rs.getString(1)); else res.add("0000"); break;
+		    	   case "lastNumber": if (rs.getObject(1)!=null) res.add(rs.getString(1)); else res.add("0000");
+		    	   System.out.println("lastNumber " +  rs.getString(1));
+		    	   break;
 		    	   }
 		       }   
 		}
@@ -92,14 +99,15 @@ public class DbAccess {
 					switch (nmStep){
 					case "insClient" : sql = "insert into client values (" + (int)step.get(1) +",'" + (String)step.get(2) + "')"; break;	
 					case "insProduct" : sql = "insert into product values (" + 
-					         	(int)step.get(1)+ ","  + (int)step.get(2) +",'" + (String)step.get(3)+ "','" + (String)step.get(4) + "')"; break;	
+					         	(int)step.get(1)+ ","  + (int)step.get(2) +",'" + (String)step.get(3)+ "','" + (Date)step.get(4) + "')"; break;	
 					case "insAccount" :  sql = "insert into account values ('" + 
 					          	(String)step.get(1) + "'," + (int)step.get(2) + ",'"  + (String)step.get(3) +"','" + 
 					          	(String)step.get(4) + "')"; break;          
 					}
+					System.out.println("execPrecedent:" + what + ":" + i + ":" + nmStep + " " +  sql);
 					s.executeUpdate(sql);
 				}
-				conn.rollback();
+				conn.commit();
 			}
 			catch (Exception e) {
 				res = false;
@@ -453,38 +461,6 @@ public class DbAccess {
 		return cl;
 	}
 	
-	public void setInitial() {
-		try{
-			int id, idCp, idC;
-			String sql1, product, operation, name;
-			Date day, end;
-			float sum, rate;
-			Statement s1 = conn.createStatement();; 
-			ResultSet rs1;
-			sql1 = "select id, day, product, operation, idCP, sum, rate, end, idC, name from event order by id";
-			// System.out.println(sql);
-			s1.execute(sql1);
-			rs1 = s1.getResultSet();
-		    while((rs1!=null) && (rs1.next())) {
-		       	id = rs1.getInt("id"); day = rs1.getDate("day");
-		        product = rs1.getString("product"); operation = rs1.getString("operation");
-		        System.out.println("i.. " + id + ":" + day + ":" + product + ":" + operation);
-		        switch(product) {
-		        case "A": switch(operation) {
-		        			case "begin": beginClient(day,rs1.getString("name")); 
-		        				break;
-		        			case "put": putClient(day,rs1.getInt("idCP"), rs1.getFloat("sum"));
-		        				   break;
-		        			}
-		        break;
-		  		case "D": break;
-		  		case "C": break;
-		  		default: 
-		  		}
-		   }
-		}
-		catch (Exception e) {System.out.println("setInitial> " + e.getMessage());}
-		}
 	// ---------------------------------------------------------------------
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

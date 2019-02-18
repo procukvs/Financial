@@ -2,45 +2,61 @@ package dbWork;
 import java.util.*;
 import java.text.*;
 
+/*
+ *  версія, що для роботи з БД використовує raw тип. 
+ *    -- DbAccessP --
+ *       читання з БД  
+ *    -- ArrayList selectOne(String what, ArrayList param)
+ *       зміна в БД
+ *    -- boolean execPrecedent(String what, ArrayList work)  
+ */
+
 public class Main {
 
 	private DbAccess db =null; 
 	Main(){
 		db = new DbAccess();
+
 	}
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Main wk = new Main();
 		wk.work();
+	    
 	}
 	private void work(){
 		System.out.println("Begin work wth Financial.");
 		if (db.connectionDb()){
-			boolean res;
-			ArrayList ap = null;
-			int newPer = 0;
-			
-			//res=db.beginClient(buildSqlDate("2012-02-01"), "Іванов");
-			//System.out.println("new Client " + res);
-			//buildSqlDate("2012-02-06"), 1, (float)341.11
-			//buildSqlDate("2012-02-09"), 1, (float)110
-			//buildSqlDate("2012-02-05"), 1, (float)10
-			//buildSqlDate("2012-02-06"), 1, (float)200
-			//buildSqlDate("2012-02-08"), 1, (float)20
-			//buildSqlDate("2012-02-08"), 1, (float)20
-			res = db.iswfPutClient(buildSqlDate("2012-02-08"), 1, (float)20);
-			if (res) System.out.println("iswfPutClient: " + db.getMsgError());
-            if (res) {
-            	res = db.putClient(buildSqlDate("2012-02-08"), 1, (float)20);
-            }
-            System.out.println("res = " + res);	
+			db.setInitial();
+			//testing();
          	db.disConnect();
 		}
 		else System.out.println("No connection to DB financial");	
 	}
 	
-	static java.sql.Date buildSqlDate(String day) {
+	private void testing(){
+		boolean res;
+		ArrayList ap = null;
+		int newPer = 0;
+		
+		//res=db.beginClient(buildSqlDate("2012-02-01"), "Іванов");
+		//System.out.println("new Client " + res);
+		//buildSqlDate("2012-02-06"), 1, (float)341.11
+		//buildSqlDate("2012-02-09"), 1, (float)110
+		//buildSqlDate("2012-02-05"), 1, (float)10
+		//buildSqlDate("2012-02-06"), 1, (float)200
+		//buildSqlDate("2012-02-08"), 1, (float)20
+		//buildSqlDate("2012-02-08"), 1, (float)20
+		res = db.iswfPutClient(buildSqlDate("2012-02-08"), 1, (float)20);
+		if (res) System.out.println("iswfPutClient: " + db.getMsgError());
+        if (res) {
+        	res = db.putClient(buildSqlDate("2012-02-08"), 1, (float)20);
+        }
+        System.out.println("res = " + res);	
+	}
+	
+	public static java.sql.Date buildSqlDate(String day) {
 		java.sql.Date sqlDate = null;
 		try {
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
