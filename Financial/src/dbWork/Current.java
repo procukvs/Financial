@@ -1,12 +1,13 @@
 package dbWork;
 
 import java.util.*;
+import java.time.*;
 
 public class Current {
 	private int idPr;
 	private int idCl;
-	private Date begin;
-	Current(int idPr, int idCl, Date begin){
+	private LocalDate begin;
+	Current(int idPr, int idCl, LocalDate begin){
 		this.idPr = idPr; this.idCl=idCl; this.begin = begin;
 	}
 	
@@ -18,7 +19,7 @@ public class Current {
 		return idCl;
 	}
 	
-	public Date getBegin() {
+	public LocalDate getBegin() {
 		return begin;
 	}
 

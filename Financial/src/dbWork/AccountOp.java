@@ -1,15 +1,16 @@
 package dbWork;
 
-import java.util.Date;
+//import java.util.Date;
+import java.time.*;
 
 public class AccountOp {
 	private int idOp;
 	private int idPr;
-	private Date day;
+	private LocalDate day;
 	private String type;
 	private float sum;
 	private int idCl;
-	public AccountOp(int idOp, int idPr, Date day, String type, float sum, int idCl) {
+	public AccountOp(int idOp, int idPr, LocalDate day, String type, float sum, int idCl) {
 		super(); this.idOp = idOp; this.idPr = idPr; this.day = day;
 		this.type = type; this.sum = sum; this.idCl = idCl;
 	}
@@ -19,7 +20,7 @@ public class AccountOp {
 	public int getIdPr() {
 		return idPr;
 	}
-	public Date getDay() {
+	public LocalDate getDay() {
 		return day;
 	}
 	public String getType() {

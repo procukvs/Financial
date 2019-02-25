@@ -104,4 +104,10 @@ create table Event(
 	name varchar(25)     -- name client
 ); 
 
-insert into Event values (1, '2012-02-01', 'A', 'begin', NULL, NULL, NULL, NULL, NULL, 'Іванов');
+insert into Event values (1, '2012-02-01', 'A', 'begin', NULL, NULL, NULL, NULL, NULL, 'Gavrosh');
+insert into Event values (2, '2012-02-06', 'A', 'put', 1, 341.11, NULL, NULL, NULL, NULL);
+insert into Event values (3, '2012-02-09', 'A', 'put', 1, 110, NULL, NULL, NULL, NULL);
+insert into Event values (4, '2012-02-05', 'A', 'put', 1, 10, NULL, NULL, NULL, NULL);
+insert into Event values (5, '2012-02-06', 'A', 'put', 1, 200, NULL, NULL, NULL, NULL);
+insert into Event values (6, '2012-02-08', 'A', 'put', 1, 20, NULL, NULL, NULL, NULL);
+insert into Event values (7, '2012-02-08', 'A', 'put', 1, 20, NULL, NULL, NULL, NULL);

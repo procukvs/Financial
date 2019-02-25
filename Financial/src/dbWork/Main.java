@@ -1,6 +1,7 @@
 package dbWork;
 import java.util.*;
 import java.text.*;
+import java.time.LocalDate;
 /*
  *   версія роботи з ДБ через прості класи 
  *     ---dbAccess ----
@@ -41,12 +42,34 @@ public class Main {
 			//buildSqlDate("2012-02-06"), 1, (float)200
 			//buildSqlDate("2012-02-08"), 1, (float)20
 			//buildSqlDate("2012-02-08"), 1, (float)20
+			/*
 			res = db.iswfPutClient(buildSqlDate("2012-02-08"), 1, (float)20);
 			if (res) System.out.println("iswfPutClient: " + db.getMsgError());
             if (res) {
             	res = db.putClient(buildSqlDate("2012-02-08"), 1, (float)20);
             }
-            System.out.println("res = " + res);	
+            */
+			Execution ex = new Execution(db);
+			ex.initial();
+			//res = ex.beginClient("Sidorov", LocalDate.of(2012, 02, 01)) != null;
+			//res = false;
+			
+			//ap = ex.iswfPutClient(LocalDate.of(2012,2,6), 8, (float)341.11);
+			/*
+			ap = ex.iswfPutClient(LocalDate.of(2012,2,9), 8, (float)110);
+			if (!ap.isEmpty()) {
+				for(int i=0; i<ap.size();i++) System.out.println("iswfPutClient: " + ap.get(i));
+			}
+			else res = ex.putClient(LocalDate.of(2012,2,9), 8, (float)110);
+			*/
+			/*
+			ap = ex.iswfTakeClient(LocalDate.of(2012,2,6), 8, (float)341.11);
+			if (!ap.isEmpty()) {
+				for(int i=0; i<ap.size();i++) System.out.println("iswfTakeClient: " + ap.get(i));
+			}
+			else res = ex.putClient(LocalDate.of(2012,2,6), 8, (float)20);		
+			*/	
+            //System.out.println("res = " + res);	
          	db.disConnect();
 		}
 		else System.out.println("No connection to DB financial");	
