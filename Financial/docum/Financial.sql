@@ -30,7 +30,8 @@ create table Product(
 
 create table Instant(
     idPr integer primary key, 
-    kind varchar(7) not null, 	
+    kind varchar(7) not null, 
+    sum float not null,
     end date not null, 
     rate float not null,
     state varchar(5) not null, 	

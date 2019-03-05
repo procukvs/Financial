@@ -376,6 +376,24 @@ public class DbAccess {
 		catch (Exception e) {System.out.println("takeCurrent> " + e.getMessage());}
 		return cur;
 	}
+	public Instant takeInstant(int idPr) {
+		Instant ins = null; 
+		try{
+			sql = "select p.idCl, p.begin, i.kind, i.sum, i.end, i.rate, i.state from product as p " + 
+		          " inner join instant as i on (p.idPr=i.idPr ) where p.idPr = " + idPr;
+			//System.out.println("takeInstant> " + sql);
+			s.execute(sql);
+			rs = s.getResultSet();
+		       if((rs!=null) && (rs.next())) {
+		    	   //Date day = rs.getDate(2);
+		    	   //LocalDate lday = day.toLocalDate();
+		    	   ins = new Instant(idPr, rs.getInt(1), rs.getDate(2).toLocalDate(), rs.getString(3),
+		    			   rs.getFloat(4), rs.getDate(5).toLocalDate(), rs.getFloat(6), rs.getString(7));
+		       }
+		}
+		catch (Exception e) {System.out.println("takeInstant> " + e.getMessage());}
+		return ins;
+	}
 	public Account takeAccount(int idPr, String name) {
 		Account ac = null; 
 		try{
@@ -451,6 +469,25 @@ public class DbAccess {
 		return el;
 	}	
 	//-------------- MAIN OPERATION---------------------------
+	public boolean beginClient(Client cl, Current cur, Account acc) {
+		boolean res = true;
+		try {
+			conn.setAutoCommit(false);
+			try{
+				addClient(cl.getIdCl(),cl.getName());
+				addProduct(cur.getIdPr(),cur.getIdCl(),"current",Date.valueOf(cur.getBegin()));
+				addAccount(acc.getNumber(), acc.getIdPr(), acc.getName(),acc.getKind());
+			}
+			catch (Exception e) {
+				res = false;
+				conn.rollback();
+				System.out.println("beginClientE1> " + e.getMessage());
+			}
+			conn.setAutoCommit(true);
+		}	
+		catch (Exception e) { res=false; System.out.println("beginClientE2> " + e.getMessage());}	
+		return res;
+	}
 	public boolean opClient(AccountOp aop, Movement mv, Amount adeb, Amount acre) {
 		boolean res = true;
 		try {
@@ -465,16 +502,86 @@ public class DbAccess {
 			catch (Exception e) {
 				res = false;
 				conn.rollback();
-				System.out.println("takeClientE1> " + e.getMessage());
+				System.out.println("opClientE1> " + e.getMessage());
 			}
 			conn.setAutoCommit(true);
 		}	
-		catch (Exception e) { res=false; System.out.println("takeClientE2> " + e.getMessage());}	
+		catch (Exception e) { res=false; System.out.println("opClientE2> " + e.getMessage());}	
 		return res;
 	}
-	
-	
+	public boolean beginDeposit(Instant ins, DeposOp dop, Account acc, Movement mv, Amount adeb, Amount acre) {
+		boolean res = true;
+		try {
+			conn.setAutoCommit(false);
+			try{
+				addProduct(ins.getIdPr(),ins.getIdCl(),"time",Date.valueOf(ins.getBegin()));
+				addInstant(ins.getIdPr(),ins.getKind(),ins.getSum(),Date.valueOf(ins.getEnd()),ins.getRate(),ins.getState());
+				addOperation(dop.getIdOp(),dop.getIdPr(),Date.valueOf(dop.getDay()),"deposit",dop.getType());
+				addAccount(acc.getNumber(), acc.getIdPr(), acc.getName(), acc.getKind());
+				if(adeb!=null) addAmount(adeb.getNumber(),Date.valueOf(adeb.getDay()),adeb.getSum());
+				if(acre!=null) addAmount(acre.getNumber(),Date.valueOf(acre.getDay()),acre.getSum());
+				addMovement(mv.getIdM(),mv.getSum(),mv.getNumberD(),mv.getNumberC(),mv.getIdOp(),Date.valueOf(dop.getDay()));
+			}
+			catch (Exception e) {
+				res = false;
+				conn.rollback();
+				System.out.println("begiDepos1> " + e.getMessage());
+			}
+			conn.setAutoCommit(true);
+		}	
+		catch (Exception e) { res=false; System.out.println("beginDepos2> " + e.getMessage());}	
+		return res;
+	}
+	public boolean opDeposit(DeposOp dop, Account accCost, Movement mvd, Movement mvp, Amount adep, Amount acur, Amount acost) {
+		boolean res = true;
+		try {
+			conn.setAutoCommit(false);
+			try{
+				updInstant(dop.getIdPr(),dop.getType());
+				addOperation(dop.getIdOp(),dop.getIdPr(),Date.valueOf(dop.getDay()),"deposit",dop.getType());
+				if (accCost!=null) addAccount(accCost.getNumber(), accCost.getIdPr(), accCost.getName(), accCost.getKind());
+				if(adep!=null) addAmount(adep.getNumber(),Date.valueOf(adep.getDay()),adep.getSum());
+				if(acur!=null) addAmount(acur.getNumber(),Date.valueOf(acur.getDay()),acur.getSum());
+				if(acost!=null) addAmount(acost.getNumber(),Date.valueOf(acost.getDay()),acost.getSum());
+				addMovement(mvd.getIdM(),mvd.getSum(),mvd.getNumberD(),mvd.getNumberC(),mvd.getIdOp(),Date.valueOf(dop.getDay()));
+				if (mvp!=null)addMovement(mvp.getIdM(),mvp.getSum(),mvp.getNumberD(),mvp.getNumberC(),mvp.getIdOp(),Date.valueOf(dop.getDay()));
+			}
+			catch (Exception e) {
+				res = false;
+				conn.rollback();
+				System.out.println("opDepos1> " + e.getMessage());
+			}
+			conn.setAutoCommit(true);
+		}	
+		catch (Exception e) { res=false; System.out.println("opDepos2> " + e.getMessage());}	
+		return res;
+	}
 	//--------- add with throws Exception ------------------------
+	public void addClient(int idCl, String name) throws Exception {
+		sql = "insert into client values (" + idCl + ",'" + name + "')";
+		//System.out.println("addClient> " + sql);
+		s.executeUpdate(sql);
+	}
+	public void addProduct(int idPr, int idCl, String kind, Date begin) throws Exception {
+		sql = "insert into product values (" + idPr + "," + idCl + ",'" + kind + "','" + begin + "')";
+		//System.out.println("addProduct> " + sql);
+		s.executeUpdate(sql);
+	}
+	public void addInstant(int idPr, String kind, float sum, Date end, float rate, String state) throws Exception {
+		sql = "insert into instant values (" + idPr + ",'" + kind + "'," + sum + ",'" + end + "'," +  rate + ",'" + state + "')";
+		//System.out.println("addInstant> " + sql);
+		s.executeUpdate(sql);
+	}
+	public void updInstant(int idPr, String state) throws Exception {
+		sql = "update instant set state = '" + state + "' where idPr = " + idPr;
+		//System.out.println("updInstant> " + sql);
+		s.executeUpdate(sql);
+	}
+	public void addAccount(String number, int idPr, String name, String kind) throws Exception {
+		sql = "insert into account values ('" + number + "'," + idPr + ",'" + name + "','" + kind + "')";
+		//System.out.println("addAccount> " + sql);
+		s.executeUpdate(sql);
+	}	
 	public void addOperation(int idOp, int idPr, Date dOp, String kind, String type) throws Exception {
 		sql = "insert into operation values (" + idOp + "," + idPr + ",'"  + dOp +"','" + kind + "','" + type + "')";
 		//System.out.println("addOperation> " + sql);
@@ -500,7 +607,7 @@ public class DbAccess {
 		s.executeUpdate(sql);
 	}
 	// ---------------------
-	public boolean beginClient(Client cl, Current cr, Account ac) {
+	public boolean beginClient1(Client cl, Current cr, Account ac) {
 		boolean res = true;
 		try {
 			conn.setAutoCommit(false);

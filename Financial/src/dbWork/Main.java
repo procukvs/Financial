@@ -30,11 +30,11 @@ public class Main {
 	private void work(){
 		System.out.println("Begin work wth Financial.");
 		if (db.connectionDb()){
-			boolean res;
+			boolean res= true;
 			ArrayList ap = null;
 			int newPer = 0;
 			
-			//res=db.beginClient(buildSqlDate("2012-02-01"), "Іванов");
+			// res=db.beginClient(buildSqlDate("2012-02-05"), "Петренко");
 			//System.out.println("new Client " + res);
 			//buildSqlDate("2012-02-06"), 1, (float)341.11
 			//buildSqlDate("2012-02-09"), 1, (float)110
@@ -50,8 +50,9 @@ public class Main {
             }
             */
 			Execution ex = new Execution(db);
-			ex.initial();
-			//res = ex.beginClient("Sidorov", LocalDate.of(2012, 02, 01)) != null;
+			//ex.initial();
+			//res = ex.putClient(LocalDate.of(2012, 02, 10),1, 1000);
+			//System.out.println("res = " + res);	
 			//res = false;
 			
 			//ap = ex.iswfPutClient(LocalDate.of(2012,2,6), 8, (float)341.11);
@@ -63,13 +64,20 @@ public class Main {
 			else res = ex.putClient(LocalDate.of(2012,2,9), 8, (float)110);
 			*/
 			/*
-			ap = ex.iswfTakeClient(LocalDate.of(2012,2,6), 8, (float)341.11);
+			ap = ex.iswfBeginDeposit(LocalDate.of(2012,2,12), 1, (float)300, (float)16.45, LocalDate.of(2012,2,24) );
 			if (!ap.isEmpty()) {
-				for(int i=0; i<ap.size();i++) System.out.println("iswfTakeClient: " + ap.get(i));
+				for(int i=0; i<ap.size();i++) System.out.println("iswfBeginDeposit: " + ap.get(i));
 			}
-			else res = ex.putClient(LocalDate.of(2012,2,6), 8, (float)20);		
-			*/	
-            //System.out.println("res = " + res);	
+			else res = ex.beginDeposit(LocalDate.of(2012,2,12), 1, (float)300, (float)16.45, LocalDate.of(2012,2,24));	
+			*/
+			
+			ap = ex.iswfCloseDeposit(LocalDate.of(2012,2,24), 2);
+			if (!ap.isEmpty()) {
+				for(int i=0; i<ap.size();i++) System.out.println("iswfCloseDeposit: " + ap.get(i));
+			}
+			else res = ex.closeDeposit(LocalDate.of(2012,2,24),2);		
+				
+            System.out.println("res = " + res);	
          	db.disConnect();
 		}
 		else System.out.println("No connection to DB financial");	
