@@ -468,6 +468,31 @@ public class DbAccess {
 		catch (Exception e) {System.out.println("takeListEvent> " + e.getMessage());}
 		return el;
 	}	
+	public Event takeEvent(int k) {
+		Event res=null;
+		try{
+			sql = "select id,day,product,operation,idCP,sum,rate,end,idC,name from event where id=" + k;
+			//System.out.println("takeListAmount> " + sql);
+			s.execute(sql);
+			rs = s.getResultSet();
+			if((rs!=null) && (rs.next())) {
+				int idCP=0, idC=0;
+				float sum=0,rate=0;
+				LocalDate end = LocalDate.of(2000, 1,1);
+				String name="";
+				if (rs.getObject("idCP")!=null) idCP = rs.getInt("idCP");
+				if (rs.getObject("sum")!=null) sum = rs.getFloat("sum");
+				if (rs.getObject("rate")!=null) rate = rs.getFloat("rate");
+				if (rs.getObject("end")!=null) end = rs.getDate("end").toLocalDate();
+				if (rs.getObject("idC")!=null) idC = rs.getInt("idC");
+				if (rs.getObject("name")!=null) name = rs.getString("name");
+		        res =new Event(rs.getInt("id"),rs.getDate("day").toLocalDate(),rs.getString("product"),
+		        		         rs.getString("operation"),idCP,sum,rate,end,idC,name);
+			}   
+		}
+		catch (Exception e) {System.out.println("takeEvent> " + e.getMessage());}
+		return res;
+	}	
 	//-------------- MAIN OPERATION---------------------------
 	public boolean beginClient(Client cl, Current cur, Account acc) {
 		boolean res = true;

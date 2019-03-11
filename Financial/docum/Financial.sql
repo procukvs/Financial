@@ -112,3 +112,9 @@ insert into Event values (4, '2012-02-05', 'A', 'put', 1, 10, NULL, NULL, NULL, 
 insert into Event values (5, '2012-02-06', 'A', 'put', 1, 200, NULL, NULL, NULL, NULL);
 insert into Event values (6, '2012-02-08', 'A', 'put', 1, 20, NULL, NULL, NULL, NULL);
 insert into Event values (7, '2012-02-08', 'A', 'put', 1, 20, NULL, NULL, NULL, NULL);
+insert into Event values (8, '2012-02-06', 'A', 'begin', NULL, NULL, NULL, NULL, NULL, 'Petrenko');
+insert into Event values (9, '2012-02-07', 'A', 'move', 1, 300, NULL, NULL, 2, NULL);
+insert into Event values (10, '2012-02-08', 'D', 'begin', 2, 300, 30, '2012-02-20', NULL, NULL);
+insert into Event values (11, '2012-02-20', 'D', 'close', 3, NULL, NULL, NULL, NULL, NULL);
+insert into Event values (12, '2012-02-21', 'D', 'begin', 2, 300, 30, '2012-03-21', NULL, NULL);
+insert into Event values (13, '2012-02-28', 'D', 'abort', 4, NULL, NULL, NULL, NULL, NULL);

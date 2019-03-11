@@ -28,7 +28,7 @@ public class Main {
 		wk.work();
 	}
 	private void work(){
-		System.out.println("Begin work wth Financial.");
+		System.out.println("Begin work with Financial.");
 		if (db.connectionDb()){
 			boolean res= true;
 			ArrayList ap = null;
@@ -50,7 +50,8 @@ public class Main {
             }
             */
 			Execution ex = new Execution(db);
-			//ex.initial();
+			//ex.initial(12);
+			ex.evalEvent(13);
 			//res = ex.putClient(LocalDate.of(2012, 02, 10),1, 1000);
 			//System.out.println("res = " + res);	
 			//res = false;
@@ -70,13 +71,13 @@ public class Main {
 			}
 			else res = ex.beginDeposit(LocalDate.of(2012,2,12), 1, (float)300, (float)16.45, LocalDate.of(2012,2,24));	
 			*/
-			
+			/*
 			ap = ex.iswfCloseDeposit(LocalDate.of(2012,2,24), 2);
 			if (!ap.isEmpty()) {
 				for(int i=0; i<ap.size();i++) System.out.println("iswfCloseDeposit: " + ap.get(i));
 			}
 			else res = ex.closeDeposit(LocalDate.of(2012,2,24),2);		
-				
+			*/	
             System.out.println("res = " + res);	
          	db.disConnect();
 		}

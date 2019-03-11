@@ -171,9 +171,8 @@ public class Execution {
 		   	if (acc==null) er.add("Not find account deposit for product " + idPr);
 			Client cl = db.takeClient(ins.getIdCl());
 			//System.out.println("Client id = " + idCl + " is = " + (cl != null) + " == " + cl.toString() );
-			if (cl != null) {
-				er.addAll(cl.iswfMoveTo(db, day, 0));
-			} else er.add("Not find client " + ins.getIdCl());
+			if (cl != null) er.addAll(cl.iswfMoveTo(db, day, 0));
+			else er.add("Not find client " + ins.getIdCl());
 		} else er.add("Not find deposit (product " + idPr + ")");
 		return er;
 	}
@@ -192,7 +191,7 @@ public class Execution {
 		int idOp = db.last("operation")+1; 
 		DeposOp dOp = new DeposOp(idOp, idPr, day, "close");
 	
-		float cost = evalPercent(ins.getEnd(), ins.getBegin(),sum,ins.getRate()); 
+		float cost = evalPercent(ins.getBegin(), ins.getEnd(),sum,ins.getRate()); 
 		LocalDate dayOp = ins.getEnd();
 		int idM = db.last("movement")+1;
 		// return deposit
@@ -203,15 +202,67 @@ public class Execution {
 		Movement mvp = new Movement(idM+1, cost, number,numberCur, idOp);
 		return db.opDeposit(dOp, accCost, mvs, mvp, adep, acur, acost);
 	}
+	public ArrayList<String> iswfAbortDeposit(LocalDate day, int idPr){
+		ArrayList<String> er = new ArrayList<>();
+		Instant ins = db.takeInstant(idPr);
+		if (ins != null) {
+		   	if(!ins.getKind().equals("deposit")) er.add("Product " + idPr + " must be deposit, but not " + ins.getKind());
+		   	if(!ins.getState().equals("work"))  er.add("Deposit must be work, but not " + ins.getState());
+		   	if(!day.isBefore(ins.getEnd())) er.add("Date of operation " + day + " must be befor end of deposit " + ins.getEnd());
+		   	if(!day.isAfter(ins.getBegin())) er.add("Date of operation " + day + " must be after begin of deposit " + ins.getBegin());
+		   	Account acc = db.takeAccount(idPr, "deposit");
+		   	if (acc==null) er.add("Not find account deposit for product " + idPr);
+			Client cl = db.takeClient(ins.getIdCl());
+			//System.out.println("Client id = " + idCl + " is = " + (cl != null) + " == " + cl.toString() );
+			if (cl != null) er.addAll(cl.iswfMoveTo(db, day, 0));
+			else er.add("Not find client " + ins.getIdCl());
+		} else er.add("Not find deposit (product " + idPr + ")");
+		return er;
+	}
+	public boolean abortDeposit(LocalDate day, int idPr) {
+		Instant ins = db.takeInstant(idPr);
+		int idCl = ins.getIdCl();
+		float sum = ins.getSum();
+		Account accDep = db.takeAccount(idPr, "deposit");
+		String numberDep = accDep.getNumber();
+		Current cur = db.takeCurrent(idCl);
+		Account accCur = db.takeAccount(cur.getIdPr(), "current");
+		String numberCur = accCur.getNumber();
+		int idOp = db.last("operation")+1; 
+		DeposOp dOp = new DeposOp(idOp, idPr, day, "abort");
+		LocalDate dayOp = day;
+		int idM = db.last("movement")+1;
+		// return deposit
+		Amount adep = Amount.maybeAmount(db, numberDep, dayOp);                         
+		Amount acur = Amount.maybeAmount(db, numberCur, dayOp);
+		Movement mvs = new Movement(idM, sum, numberDep,numberCur, idOp);
+		Account accCost = null;
+		Amount acost = null;
+		Movement mvp = null;
+		LocalDate begin = ins.getBegin();
+		LocalDate end = ins.getEnd();
+		if(ChronoUnit.DAYS.between(begin,day)>= ChronoUnit.DAYS.between(begin,end)/2) {
+			System.out.println("ChronoUnit.DAYS.between(begin,day)= " + ChronoUnit.DAYS.between(begin,day) 
+			                    + " ChronoUnit.DAYS.between(begin,end)/2= " + ChronoUnit.DAYS.between(begin,end)/2); 
+			String number = db.lastNumber("costDep");
+			number = Account.evalNextNumber(Account.evalClass("costDep"), number);
+			accCost = new Account(number,idPr, "costDep", "act");
+			float cost = evalPercent(ins.getBegin(),day,sum,ins.getRate()/2); 
+			acost = Amount.maybeAmount(db, number, dayOp);
+			mvp = new Movement(idM+1, cost, number,numberCur, idOp);
+		} 
+		return db.opDeposit(dOp, accCost, mvs, mvp, adep, acur, acost);
+	}
 	public static float evalPercent(LocalDate begin, LocalDate end, float sum, float rate) {
-		long rlong = (long)(sum * ChronoUnit.DAYS.between(end,begin)*rate);
+		long rlong = (long)(sum * ChronoUnit.DAYS.between(begin,end)*rate/365);
 		return (float) rlong/100;
 	}
-	public void initial() {
+	public void initial(int to) {
 		ArrayList<Event> el = db.takeListEvent();
 		ArrayList<String> ap = null;
-		for(int i=0;i<el.size();i++) {
+		for(int i=0;i<Math.min(to,el.size());i++) {
 			Event ev = el.get(i);
+			/*
 			System.out.println(ev.toString());
 			boolean isExec = true;
 			boolean res = false;
@@ -231,8 +282,48 @@ public class Execution {
 			if (isExec) {
 				if (ap.isEmpty()) System.out.println("Execution event " + ev.getId() + " is " + res);
 				else for(int j=0; j<ap.size();j++) System.out.println("  :" + ap.get(j));
-			} else 	System.out.println("Execution event " + ev.getId() + ":" + ev.getProduct() + "-" + ev.getOperation() +  " not relize!");   
+			} else 	System.out.println("Execution event " + ev.getId() + ":" + ev.getProduct() + "-" + ev.getOperation() +  " not relize!");  
+			*/
+			evalEvent(ev);
 		}
+	}
+	public void evalEvent(int k) {
+		Event ev = db.takeEvent(k);
+		if(ev!=null) evalEvent(ev);
+		else System.out.println("Not find in DB event " + k + " !");
+	}
+	public void evalEvent(Event ev) {
+		ArrayList<String> ap = null;
+		System.out.println(ev.toString());
+		boolean isExec = true;
+		boolean res = false;
+		switch(ev.getProduct()) {
+		case "A": 
+			switch (ev.getOperation()) {
+			case "begin": ap = new ArrayList<>();
+			              res = beginClient(ev.getName(), ev.getDay()); break;
+			case "put": ap = iswfPutClient(ev.getDay(), ev.getIdCP(), ev.getSum());
+			            if (ap.isEmpty()) res = putClient(ev.getDay(), ev.getIdCP(), ev.getSum());  break;
+			case "take":ap = iswfTakeClient(ev.getDay(), ev.getIdCP(), ev.getSum());
+                        if (ap.isEmpty()) res = takeClient(ev.getDay(), ev.getIdCP(), ev.getSum());  break;
+			case "move": ap = iswfMoveClient(ev.getDay(), ev.getIdCP(), ev.getSum(), ev.getIdC());
+                        if (ap.isEmpty()) res = moveClient(ev.getDay(), ev.getIdCP(), ev.getSum(), ev.getIdC());  break;	
+			} break;
+		case "D": 
+			switch (ev.getOperation()) {
+			case "begin": ap = iswfBeginDeposit(ev.getDay(), ev.getIdCP(), ev.getSum(), ev.getRate(), ev.getEnd());
+                          if (ap.isEmpty()) res = beginDeposit(ev.getDay(), ev.getIdCP(), ev.getSum(), ev.getRate(), ev.getEnd());  break;
+			case "close": ap = iswfCloseDeposit(ev.getDay(), ev.getIdCP());
+                          if (ap.isEmpty()) res = closeDeposit(ev.getDay(), ev.getIdCP()); break;	
+			case "abort": ap = iswfAbortDeposit(ev.getDay(), ev.getIdCP());
+                          if (ap.isEmpty()) res = abortDeposit(ev.getDay(), ev.getIdCP()); break;	
+			} break;
+		case "C":	isExec = false; break;	
+		}
+		if (isExec) {
+			if (ap.isEmpty()) System.out.println("Execution event " + ev.getId() + " is " + res);
+			else for(int j=0; j<ap.size();j++) System.out.println("  :" + ap.get(j));
+		} else 	System.out.println("Execution event " + ev.getId() + ":" + ev.getProduct() + "-" + ev.getOperation() +  " not relize!");   	
 	}
 
 }
